@@ -1,0 +1,12 @@
+{
+  "name": "alice-chatbot-plugin",
+  "version": "1.0.0",
+  "description": "Standalone Alice Chatbot Plugin",
+  "main": "alice-plugin.js",
+  "files": [
+    "alice-plugin.js",
+    "style.css"
+  ],
+  "author": "Chirag Narola",
+  "license": "Private"
+}
