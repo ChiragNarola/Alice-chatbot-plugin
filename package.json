@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Standalone Alice Chatbot Plugin",
   "main": "alice-plugin.js",
+  "scripts": {
+    "dev": "npx serve ."
+  },
   "files": [
     "alice-plugin.js",
     "style.css"

@@ -18,7 +18,8 @@
 (function () {
     // ─── CONFIG ───────────────────────────────────────────────────────────────
     const cfg = Object.assign({
-        apiUrl:         '/api/v1/freeChat',
+        //actual backend api need to be updated
+        apiUrl:         'http://192.168.100.25:8000/api/v1/nurii-chat',
         signupUrl:      '/signup',
         maxMessages:    3,
         title:          'Alice AI Guide',
