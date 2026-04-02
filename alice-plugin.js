@@ -19,20 +19,20 @@
     // ─── CONFIG ───────────────────────────────────────────────────────────────
     const cfg = Object.assign({
         //actual backend api need to be updated
-        apiUrl:         'http://192.168.100.25:8000/api/v1/nurii-chat',
-        signupUrl:      '/signup',
-        maxMessages:    3,
-        title:          'Alice AI Guide',
+        apiUrl: 'http://192.168.100.25:8000/api/v1/nurii-chat',
+        signupUrl: 'https://chat.alice-ai.co.uk/signup',
+        maxMessages: 3,
+        title: 'Alice AI Guide',
         welcomeMessage: "Hello! I'm Alice. How can I help you today?",
-        primaryColor:   '#1D7A74',
+        primaryColor: '#1D7A74',
     }, window.AliceChatConfig || {});
 
     // ─── STATE ────────────────────────────────────────────────────────────────
     let isOpen = false;
 
-    const SESSION_KEY  = 'alice_session_id';
-    const COUNT_KEY    = 'alice_msg_count';   // how many messages already sent
-    const LIMIT_KEY    = 'alice_limit_hit';   // 'true' when limit reached
+    const SESSION_KEY = 'alice_session_id';
+    const COUNT_KEY = 'alice_msg_count';   // how many messages already sent
+    const LIMIT_KEY = 'alice_limit_hit';   // 'true' when limit reached
 
     const generateUUID = () => {
         try { return crypto.randomUUID(); }
@@ -52,7 +52,7 @@
     if (isNaN(messagesSent)) messagesSent = 0;
 
     const limitAlreadyHit = localStorage.getItem(LIMIT_KEY) === 'true';
-    const remaining       = Math.max(0, cfg.maxMessages - messagesSent);
+    const remaining = Math.max(0, cfg.maxMessages - messagesSent);
 
     // ─── STYLES ───────────────────────────────────────────────────────────────
     const css = `
@@ -106,6 +106,16 @@
         }
         .alice-msg.ai   { background: #edf0f2; color: #333; align-self: flex-start; border-bottom-left-radius: 3px; }
         .alice-msg.user { background: ${cfg.primaryColor}; color: #fff; align-self: flex-end; border-bottom-right-radius: 3px; }
+
+        .alice-msg h1, .alice-msg h2, .alice-msg h3 { margin: 8px 0 4px; font-size: 1.1em; line-height: 1.2; }
+        .alice-msg h1 { font-size: 1.25em; }
+        .alice-msg p { margin: 0 0 8px; }
+        .alice-msg p:last-child { margin-bottom: 0; }
+        .alice-msg ul { margin: 4px 0 8px; padding-left: 20px; }
+        .alice-msg li { margin-bottom: 4px; }
+        .alice-msg pre { background: rgba(0,0,0,0.05); padding: 8px; border-radius: 6px; overflow-x: auto; margin: 8px 0; }
+        .alice-msg code { font-family: monospace; background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px; font-size: 0.9em; }
+        .alice-msg pre code { background: none; padding: 0; }
 
         /* Limit box */
         .alice-limit-box {
@@ -196,20 +206,83 @@
     document.body.appendChild(wrap);
 
     // ─── DOM REFS ─────────────────────────────────────────────────────────────
-    const winEl     = document.getElementById('alice-win');
-    const bubble    = document.getElementById('alice-bubble');
-    const closeBtn  = document.getElementById('alice-close');
-    const msgList   = document.getElementById('alice-messages');
-    const form      = document.getElementById('alice-form');
-    const inputEl   = document.getElementById('alice-input');
-    const sendBtn   = document.getElementById('alice-send-btn');
-    const counter   = document.getElementById('alice-counter');
+    const winEl = document.getElementById('alice-win');
+    const bubble = document.getElementById('alice-bubble');
+    const closeBtn = document.getElementById('alice-close');
+    const msgList = document.getElementById('alice-messages');
+    const form = document.getElementById('alice-form');
+    const inputEl = document.getElementById('alice-input');
+    const sendBtn = document.getElementById('alice-send-btn');
+    const counter = document.getElementById('alice-counter');
 
     // ─── HELPERS ──────────────────────────────────────────────────────────────
+    function parseMarkdown(text) {
+        if (!text) return '';
+        
+        let html = text
+            // Escape HTML tags to prevent XSS
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+            
+        // Block Elements
+        // Code blocks
+        html = html.replace(/```([\s\S]*?)```/g, function(match, code) {
+            return '<pre><code>' + code + '</code></pre>';
+        });
+        
+        // Headers
+        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        
+        // Lists
+        // First convert list items
+        html = html.replace(/^\s*[\-\*]\s+(.*$)/gim, '<li>$1</li>');
+        html = html.replace(/^\s*\d+\.\s+(.*$)/gim, '<li>$1</li>');
+        
+        // Wrap adjacent <li> tags into <ul>
+        html = html.replace(/(?:<li>.*<\/li>\n?)+/gim, function(match) {
+            return '<ul>' + match + '</ul>';
+        });
+        
+        // Inline Elements
+        // Bold Italic
+        html = html.replace(/\*\*\*([^\*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+        // Bold
+        html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+        // Italic
+        html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
+        
+        // Inline Code
+        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+        
+        // Newlines -> <br>
+        html = html.replace(/\n/g, '<br/>');
+        
+        // Clean up <br/> around block tags
+        html = html.replace(/(<br\/>)*<ul>(<br\/>)*/gi, '<ul>');
+        html = html.replace(/(<br\/>)*<\/ul>(<br\/>)*/gi, '</ul>');
+        html = html.replace(/(<br\/>)*<li>(<br\/>)*/gi, '<li>');
+        html = html.replace(/(<br\/>)*<\/li>(<br\/>)*/gi, '</li>');
+        html = html.replace(/(<br\/>)*<h([1-6])>(.*?)<\/h\2>(<br\/>)*/gi, '<h$2>$3</h$2>');
+        html = html.replace(/(<br\/>)*<pre>(.*?)<\/pre>(<br\/>)*/gi, '<pre>$2</pre>');
+        
+        return html;
+    }
+
     function addMsg(text, type) {
         const d = document.createElement('div');
         d.className = `alice-msg ${type}`;
-        d.textContent = text;
+        
+        if (type === 'ai') {
+            d.innerHTML = parseMarkdown(text);
+        } else {
+            // Escape user text to prevent XSS
+            let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            d.innerHTML = safeText.replace(/\n/g, '<br/>');
+        }
+        
         msgList.appendChild(d);
         msgList.scrollTop = msgList.scrollHeight;
         return d;
