@@ -4,7 +4,13 @@
   "description": "Standalone Alice Chatbot Plugin",
   "main": "alice-plugin.js",
   "scripts": {
-    "dev": "npx serve ."
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "terser": "^5.29.2",
+    "vite": "^5.2.0"
   },
   "files": [
     "alice-plugin.js",
