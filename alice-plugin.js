@@ -19,7 +19,7 @@
     // ─── CONFIG ───────────────────────────────────────────────────────────────
     const cfg = Object.assign({
         //actual backend api need to be updated
-        apiUrl: 'http://192.168.100.25:8000/api/v1/nurii-chat',
+        apiUrl: 'http://clientapp.narola.online:2450/api/v1/nurii-chat',
         signupUrl: 'https://chat.alice-ai.co.uk/signup',
         maxMessages: 3,
         title: 'Alice AI Guide',
@@ -218,34 +218,34 @@
     // ─── HELPERS ──────────────────────────────────────────────────────────────
     function parseMarkdown(text) {
         if (!text) return '';
-        
+
         let html = text
             // Escape HTML tags to prevent XSS
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
-            
+
         // Block Elements
         // Code blocks
         html = html.replace(/```([\s\S]*?)```/g, function(match, code) {
             return '<pre><code>' + code + '</code></pre>';
         });
-        
+
         // Headers
         html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
         html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
         html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-        
+
         // Lists
         // First convert list items
         html = html.replace(/^\s*[\-\*]\s+(.*$)/gim, '<li>$1</li>');
         html = html.replace(/^\s*\d+\.\s+(.*$)/gim, '<li>$1</li>');
-        
+
         // Wrap adjacent <li> tags into <ul>
-        html = html.replace(/(?:<li>.*<\/li>\n?)+/gim, function(match) {
+        html = html.replace(/(?:<li>.*<\/li>\n?)+/gim, function (match) {
             return '<ul>' + match + '</ul>';
         });
-        
+
         // Inline Elements
         // Bold Italic
         html = html.replace(/\*\*\*([^\*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
@@ -253,13 +253,13 @@
         html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
         // Italic
         html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
-        
+
         // Inline Code
         html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-        
+
         // Newlines -> <br>
         html = html.replace(/\n/g, '<br/>');
-        
+
         // Clean up <br/> around block tags
         html = html.replace(/(<br\/>)*<ul>(<br\/>)*/gi, '<ul>');
         html = html.replace(/(<br\/>)*<\/ul>(<br\/>)*/gi, '</ul>');
@@ -267,14 +267,14 @@
         html = html.replace(/(<br\/>)*<\/li>(<br\/>)*/gi, '</li>');
         html = html.replace(/(<br\/>)*<h([1-6])>(.*?)<\/h\2>(<br\/>)*/gi, '<h$2>$3</h$2>');
         html = html.replace(/(<br\/>)*<pre>(.*?)<\/pre>(<br\/>)*/gi, '<pre>$2</pre>');
-        
+
         return html;
     }
 
     function addMsg(text, type) {
         const d = document.createElement('div');
         d.className = `alice-msg ${type}`;
-        
+
         if (type === 'ai') {
             d.innerHTML = parseMarkdown(text);
         } else {
@@ -282,7 +282,7 @@
             let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             d.innerHTML = safeText.replace(/\n/g, '<br/>');
         }
-        
+
         msgList.appendChild(d);
         msgList.scrollTop = msgList.scrollHeight;
         return d;
