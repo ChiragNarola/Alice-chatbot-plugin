@@ -19,12 +19,18 @@
     // ─── CONFIG ───────────────────────────────────────────────────────────────
     const cfg = Object.assign({
         //actual backend api need to be updated
-        apiUrl: 'http://192.168.100.25:8000/api/v1/nurii-chat',
+        apiUrl: 'http://clientapp.narola.online:2450/api/v1/nurii-chat',
         signupUrl: 'https://chat.alice-ai.co.uk/signup',
         maxMessages: 3,
         title: 'Alice AI Guide',
         welcomeMessage: "Hello! I'm Alice. How can I help you today?",
         primaryColor: '#1D7A74',
+        suggestions: [
+            "How do I choose the right nursery for my child?",
+            "What should I look for when visiting a nursery?",
+            "Is my child ready to start nursery?",
+            "What funding am I entitled to and how does it work?"
+        ]
     }, window.AliceChatConfig || {});
 
     // ─── STATE ────────────────────────────────────────────────────────────────
@@ -164,6 +170,33 @@
             transition: opacity .2s; flex-shrink: 0;
         }
         .alice-send:disabled { opacity: .45; cursor: not-allowed; }
+
+        /* Suggestions */
+        .alice-suggestions {
+            padding: 10px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: #fff;
+            border-top: 1px solid #f0f0f0;
+        }
+        .alice-suggestion-item {
+            background: #fff;
+            color: ${cfg.primaryColor};
+            border: 1px solid ${cfg.primaryColor};
+            padding: 7px 14px;
+            border-radius: 18px;
+            font-size: 12.5px;
+            cursor: pointer;
+            transition: all .2s;
+            line-height: 1.3;
+        }
+        .alice-suggestion-item:hover {
+            background: ${cfg.primaryColor};
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
     `;
 
     const styleEl = document.createElement('style');
@@ -185,6 +218,7 @@
             <div class="alice-counter" id="alice-counter">
                 ${limitAlreadyHit ? 'No free chats left' : `${remaining} free chat${remaining !== 1 ? 's' : ''} remaining`}
             </div>
+            <div class="alice-suggestions" id="alice-suggestions"></div>
             <form class="alice-input-area" id="alice-form">
                 <input class="alice-input" id="alice-input" type="text"
                     placeholder="Ask a question..."
@@ -214,38 +248,39 @@
     const inputEl = document.getElementById('alice-input');
     const sendBtn = document.getElementById('alice-send-btn');
     const counter = document.getElementById('alice-counter');
+    const suggestionsBox = document.getElementById('alice-suggestions');
 
     // ─── HELPERS ──────────────────────────────────────────────────────────────
     function parseMarkdown(text) {
         if (!text) return '';
-        
+
         let html = text
             // Escape HTML tags to prevent XSS
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
-            
+
         // Block Elements
         // Code blocks
-        html = html.replace(/```([\s\S]*?)```/g, function(match, code) {
+        html = html.replace(/```([\s\S]*?)```/g, function (match, code) {
             return '<pre><code>' + code + '</code></pre>';
         });
-        
+
         // Headers
         html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
         html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
         html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-        
+
         // Lists
         // First convert list items
         html = html.replace(/^\s*[\-\*]\s+(.*$)/gim, '<li>$1</li>');
         html = html.replace(/^\s*\d+\.\s+(.*$)/gim, '<li>$1</li>');
-        
+
         // Wrap adjacent <li> tags into <ul>
-        html = html.replace(/(?:<li>.*<\/li>\n?)+/gim, function(match) {
+        html = html.replace(/(?:<li>.*<\/li>\n?)+/gim, function (match) {
             return '<ul>' + match + '</ul>';
         });
-        
+
         // Inline Elements
         // Bold Italic
         html = html.replace(/\*\*\*([^\*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
@@ -253,13 +288,13 @@
         html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
         // Italic
         html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
-        
+
         // Inline Code
         html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-        
+
         // Newlines -> <br>
         html = html.replace(/\n/g, '<br/>');
-        
+
         // Clean up <br/> around block tags
         html = html.replace(/(<br\/>)*<ul>(<br\/>)*/gi, '<ul>');
         html = html.replace(/(<br\/>)*<\/ul>(<br\/>)*/gi, '</ul>');
@@ -267,14 +302,14 @@
         html = html.replace(/(<br\/>)*<\/li>(<br\/>)*/gi, '</li>');
         html = html.replace(/(<br\/>)*<h([1-6])>(.*?)<\/h\2>(<br\/>)*/gi, '<h$2>$3</h$2>');
         html = html.replace(/(<br\/>)*<pre>(.*?)<\/pre>(<br\/>)*/gi, '<pre>$2</pre>');
-        
+
         return html;
     }
 
     function addMsg(text, type) {
         const d = document.createElement('div');
         d.className = `alice-msg ${type}`;
-        
+
         if (type === 'ai') {
             d.innerHTML = parseMarkdown(text);
         } else {
@@ -282,7 +317,7 @@
             let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             d.innerHTML = safeText.replace(/\n/g, '<br/>');
         }
-        
+
         msgList.appendChild(d);
         msgList.scrollTop = msgList.scrollHeight;
         return d;
@@ -332,6 +367,27 @@
         localStorage.setItem(LIMIT_KEY, 'true');
     }
 
+    function renderSuggestions() {
+        if (!cfg.suggestions || cfg.suggestions.length === 0 || messagesSent > 0) {
+            suggestionsBox.style.display = 'none';
+            return;
+        }
+
+        suggestionsBox.innerHTML = '';
+        cfg.suggestions.forEach(q => {
+            const btn = document.createElement('div');
+            btn.className = 'alice-suggestion-item';
+            btn.textContent = q;
+            btn.addEventListener('click', () => {
+                inputEl.value = q;
+                form.dispatchEvent(new Event('submit'));
+                suggestionsBox.style.display = 'none';
+            });
+            suggestionsBox.appendChild(btn);
+        });
+        suggestionsBox.style.display = 'flex';
+    }
+
     function toggleChat() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -339,6 +395,7 @@
             if (!inputEl.disabled) inputEl.focus();
             // Restore limit UI on re-open if needed
             if (limitAlreadyHit || messagesSent >= cfg.maxMessages) showLimitUI();
+            renderSuggestions();
         } else {
             winEl.classList.remove('open');
         }
@@ -359,6 +416,7 @@
 
         addMsg(text, 'user');
         inputEl.value = '';
+        suggestionsBox.style.display = 'none';
 
         const loadingEl = addMsg('Alice is thinking…', 'ai');
 
