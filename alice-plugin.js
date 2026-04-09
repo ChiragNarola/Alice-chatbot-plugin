@@ -25,6 +25,12 @@
         title: 'Alice AI Guide',
         welcomeMessage: "Hello! I'm Alice. How can I help you today?",
         primaryColor: '#1D7A74',
+        suggestions: [
+            "How do I choose the right nursery for my child?",
+            "What should I look for when visiting a nursery?",
+            "Is my child ready to start nursery?",
+            "What funding am I entitled to and how does it work?"
+        ]
     }, window.AliceChatConfig || {});
 
     // ─── STATE ────────────────────────────────────────────────────────────────
@@ -164,6 +170,33 @@
             transition: opacity .2s; flex-shrink: 0;
         }
         .alice-send:disabled { opacity: .45; cursor: not-allowed; }
+
+        /* Suggestions */
+        .alice-suggestions {
+            padding: 10px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: #fff;
+            border-top: 1px solid #f0f0f0;
+        }
+        .alice-suggestion-item {
+            background: #fff;
+            color: ${cfg.primaryColor};
+            border: 1px solid ${cfg.primaryColor};
+            padding: 7px 14px;
+            border-radius: 18px;
+            font-size: 12.5px;
+            cursor: pointer;
+            transition: all .2s;
+            line-height: 1.3;
+        }
+        .alice-suggestion-item:hover {
+            background: ${cfg.primaryColor};
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
     `;
 
     const styleEl = document.createElement('style');
@@ -185,6 +218,7 @@
             <div class="alice-counter" id="alice-counter">
                 ${limitAlreadyHit ? 'No free chats left' : `${remaining} free chat${remaining !== 1 ? 's' : ''} remaining`}
             </div>
+            <div class="alice-suggestions" id="alice-suggestions"></div>
             <form class="alice-input-area" id="alice-form">
                 <input class="alice-input" id="alice-input" type="text"
                     placeholder="Ask a question..."
@@ -214,6 +248,7 @@
     const inputEl = document.getElementById('alice-input');
     const sendBtn = document.getElementById('alice-send-btn');
     const counter = document.getElementById('alice-counter');
+    const suggestionsBox = document.getElementById('alice-suggestions');
 
     // ─── HELPERS ──────────────────────────────────────────────────────────────
     function parseMarkdown(text) {
@@ -227,7 +262,7 @@
 
         // Block Elements
         // Code blocks
-        html = html.replace(/```([\s\S]*?)```/g, function(match, code) {
+        html = html.replace(/```([\s\S]*?)```/g, function (match, code) {
             return '<pre><code>' + code + '</code></pre>';
         });
 
@@ -332,6 +367,27 @@
         localStorage.setItem(LIMIT_KEY, 'true');
     }
 
+    function renderSuggestions() {
+        if (!cfg.suggestions || cfg.suggestions.length === 0 || messagesSent > 0) {
+            suggestionsBox.style.display = 'none';
+            return;
+        }
+
+        suggestionsBox.innerHTML = '';
+        cfg.suggestions.forEach(q => {
+            const btn = document.createElement('div');
+            btn.className = 'alice-suggestion-item';
+            btn.textContent = q;
+            btn.addEventListener('click', () => {
+                inputEl.value = q;
+                form.dispatchEvent(new Event('submit'));
+                suggestionsBox.style.display = 'none';
+            });
+            suggestionsBox.appendChild(btn);
+        });
+        suggestionsBox.style.display = 'flex';
+    }
+
     function toggleChat() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -339,6 +395,7 @@
             if (!inputEl.disabled) inputEl.focus();
             // Restore limit UI on re-open if needed
             if (limitAlreadyHit || messagesSent >= cfg.maxMessages) showLimitUI();
+            renderSuggestions();
         } else {
             winEl.classList.remove('open');
         }
@@ -359,6 +416,7 @@
 
         addMsg(text, 'user');
         inputEl.value = '';
+        suggestionsBox.style.display = 'none';
 
         const loadingEl = addMsg('Alice is thinking…', 'ai');
 
