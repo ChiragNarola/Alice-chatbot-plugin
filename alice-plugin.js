@@ -204,8 +204,12 @@
     document.head.appendChild(styleEl);
 
     // ─── HTML ─────────────────────────────────────────────────────────────────
-    const wrap = document.createElement('div');
-    wrap.id = 'alice-chat-plugin';
+    const wrap = document.getElementById('alice-chat-plugin') || (() => {
+        const el = document.createElement('div');
+        el.id = 'alice-chat-plugin';
+        document.body.appendChild(el);
+        return el;
+    })();
     wrap.innerHTML = `
         <div class="alice-window" id="alice-win">
             <div class="alice-header">
@@ -237,7 +241,6 @@
             </svg>
         </div>
     `;
-    document.body.appendChild(wrap);
 
     // ─── DOM REFS ─────────────────────────────────────────────────────────────
     const winEl = document.getElementById('alice-win');

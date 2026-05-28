@@ -6,8 +6,13 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'alice-plugin.js'),
       name: 'AliceChatPlugin',
-      fileName: 'alice-plugin',
+      fileName: (format)=>`alice-plugin.${format}.js`,
       formats: ['iife']
+    },
+    rollupOptions:{
+      output:{
+        assetFileNames:`chatbot.[ext]`,
+      }
     },
     minify: 'terser',
   }
