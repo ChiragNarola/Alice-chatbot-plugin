@@ -17,9 +17,16 @@
  */
 (function () {
     // ─── CONFIG ───────────────────────────────────────────────────────────────
+    const userConfig = window.AliceChatConfig || {};
+    const apiBase = userConfig.apiBaseUrl || 'https://alice-apis-hjdsgjcsh8b2esbz.westeurope-01.azurewebsites.net/api/v1';
+    const nurseryId = userConfig.nurseryId;
+
+    if (!nurseryId) {
+        console.error('[AlicePlugin] nurseryId is required in window.AliceChatConfig');
+    }
+
     const cfg = Object.assign({
-        //actual backend api need to be updated
-        apiUrl: 'http://clientapp.narola.online:2450/api/v1/nurii-chat',
+        apiUrl: `${apiBase}/partner-nursery/${nurseryId}/chat`,
         signupUrl: 'https://chat.alice-ai.co.uk/signup',
         maxMessages: 3,
         title: 'Alice AI Guide',
@@ -31,7 +38,7 @@
             "Is my child ready to start nursery?",
             "What funding am I entitled to and how does it work?"
         ]
-    }, window.AliceChatConfig || {});
+    }, userConfig);
 
     // ─── STATE ────────────────────────────────────────────────────────────────
     let isOpen = false;

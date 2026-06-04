@@ -5,15 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot Integration Test</title>
-    <!-- Import Google Font used by the chatbot -->
     <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <!-- 1. Configure the Chatbot Widget -->
     <script>
         window.AliceChatConfig = {
-            apiUrl: 'http://clientapp.narola.online:2450/api/v1/nurii-chat',
+            apiBaseUrl: 'https://alice-apis-hjdsgjcsh8b2esbz.westeurope-01.azurewebsites.net/api/v1',
+            nurseryId: 5,
             signupUrl: 'https://chat.alice-ai.co.uk/signup',
             maxMessages: 3,
             title: 'Alice AI Guide',
@@ -22,8 +21,8 @@
         };
     </script>
 
-    <!-- 2. Load the Production Built Chatbot Plugin -->
-    <script src="dist/alice-plugin.iife.js" defer></script>
+    <!-- Point directly to alice-plugin.js, not dist/ -->
+    <script src="https://icy-sand-0c577ff03.7.azurestaticapps.net/alice-plugin.js" defer></script>
 </body>
 
 </html>
