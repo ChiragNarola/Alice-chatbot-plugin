@@ -4,25 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Integration Test</title>
+    <title>Admin Chatbot Integration Test</title>
     <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <script>
         window.AliceChatConfig = {
-            apiBaseUrl: 'https://alice-apis-hjdsgjcsh8b2esbz.westeurope-01.azurewebsites.net/api/v1',
-            nurseryId: 5,
-            signupUrl: 'https://chat.alice-ai.co.uk/signup',
-            maxMessages: 3,
-            title: 'Alice AI Guide',
-            welcomeMessage: "Hello! I'm Alice. How can I help you today?",
+            apiUrl: 'https://alice-apis-hjdsgjcsh8b2esbz.westeurope-01.azurewebsites.net/api/v1/admin-chatbot/message',
+            title: 'Ask A.L.I.C.E',
+            welcomeMessage: "Hello! I'm here to help you with operational questions — signups, chats, feedback, usage, and more. What would you like to know today?",
             primaryColor: '#1D7A74'
         };
     </script>
 
-    <!-- Point directly to alice-plugin.js, not dist/ -->
-    <script src="https://icy-sand-0c577ff03.7.azurestaticapps.net/alice-plugin.js" defer></script>
+    <script src="https://icy-sand-0c577ff03.7.azurestaticapps.net/admin-plugin.js" defer></script>
 </body>
 
 </html>
